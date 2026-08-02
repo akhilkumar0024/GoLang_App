@@ -1,0 +1,26 @@
+# Multi Stage Build 
+
+# Stage 1 Builder
+FROM golang:1.26 AS builder
+
+WORKDIR /app
+
+# Copy dependency manifest
+COPY go.mod ./
+
+# Copy code application code 
+COPY . .
+
+# force Go to make its own selfcontained static library 
+RUN CGO_ENABLED=0 GOOS=linux go build -o main
+
+# Stage 2
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=builder /app/main /app/main
+
+EXPOSE 8080
+
+CMD ["/app/main"]
